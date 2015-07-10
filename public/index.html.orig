@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Browser Uploader Demo</title>
+</head>
+<body>
+<h1>Browser Uploader Demo</h1>
+<p>Cognito + S3 Direct Uploading Demo</p>
+<input id="files" type="file" multiple>
+<button id="uploadButton" type="button" disabled>Upload</button>
+
+<ul id="uploadedList"></ul>
+
+<script src="aws-sdk.min.js"></script>
+<script>
+    (function(){
+        // Settings
+        var cognitoRegion = 'us-east-1';
+        var cognitoIdentityPoolId = 'us-east-1:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx';
+        var s3Region = 'ap-northeast-1';
+        var s3Bucket = 'yourbucketname';
+        var websiteUrlBase = 'http://yourbucketname.s3-website-ap-northeast-1.amazonaws.com';
+
+        AWS.config.region = cognitoRegion;
+        AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+            IdentityPoolId: cognitoIdentityPoolId
+        });
+        AWS.config.credentials.get(function(err) {
+            if (err) {
+                console.log(err, err.stack);
+            } else {
+                console.log("Cognito Identity Id:" + AWS.config.credentials.identityId);
+            }
+        });
+
+        function startUploading() {
+            disableUploadButton();
+            var filesElement = document.getElementById('files');
+            var fileNum = filesElement.files.length;
+            var uid = uuid();
+            var s3 = new AWS.S3({
+                region: s3Region
+            });
+            for (var i=0; i<fileNum; i++) {
+                var file = filesElement.files[i];
+                if (file) {
+                    var key = 'upload/' + uid + '/' + file.name;
+                    (function (key) {
+                        s3.putObject({
+                            Bucket: s3Bucket,
+                            Key: key,
+                            ACL: 'public-read',
+                            ContentType: file.type,
+                            Body: file
+                        }, function(err) {
+                            if (err) {
+                                console.log(err, err.stack);
+                            } else {
+                                uploaded(key);
+                            }
+                        });
+                    })(key);
+                }
+            }
+            enableUploadButton();
+        }
+
+        function uploaded(key) {
+            var url = websiteUrlBase + '/' + key;
+            var uploadedList = document.getElementById('uploadedList');
+            var link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('target', '_blank');
+            link.appendChild(document.createTextNode(url));
+            var li = document.createElement('li');
+            li.appendChild(link);
+            uploadedList.appendChild(li);
+        }
+
+        var uploadButton = document.getElementById('uploadButton');
+        uploadButton.addEventListener('click', startUploading);
+
+        function enableUploadButton() {
+            uploadButton.removeAttribute('disabled');
+        }
+
+        function disableUploadButton() {
+            uploadButton.setAttribute('disabled', true);
+        }
+
+        // https://gist.github.com/jcxplorer/823878
+        function uuid() {
+            var uuid = "", i, random;
+            for (i = 0; i < 32; i++) {
+                random = Math.random() * 16 | 0;
+
+                if (i == 8 || i == 12 || i == 16 || i == 20) {
+                    uuid += "-"
+                }
+                uuid += (i == 12 ? 4 : (i == 16 ? (random & 3 | 8) : random)).toString(16);
+            }
+            return uuid;
+        }
+
+        enableUploadButton();
+    })();
+</script>
+</body>
+</html>
