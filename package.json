@@ -1,0 +1,19 @@
+{
+  "name": "browser-uploader-demo",
+  "version": "0.0.0",
+  "description": "browser-uploader-demo ---",
+  "main": "index.js",
+  "dependencies": {
+    "aws-sdk":"2.*",
+    "config": "*"
+  },
+  "devDependencies": {
+    "mocha": "*",
+    "chai": "*",
+    "sinon": "*",
+    "proxyquire": "*"
+  },
+  "scripts": {
+    "test": "npm -s run-script unit"
+  }
+}

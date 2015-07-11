@@ -1,3 +1,5 @@
 .idea
 browser-uploader-demo.iml
 public/index.html
+config/default.json
+node_modules

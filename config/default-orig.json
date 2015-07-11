@@ -1,0 +1,6 @@
+{
+  "dynamodb": {
+    "region": "ap-northeast-1",
+    "table": "browser-uploader-demo-uploads"
+  }
+}

@@ -53,6 +53,88 @@ CORS設定サンプル
 }
 ```
 
+## DynamoDB
+
+config/default.json で設定したテーブルを作成
+
+キー Key (文字列)
+
+レンジキー CreatedAt (文字列)
+
+## Lambda
+
+S3と同じリージョンにファンクション作成
+
+ZIPアップロードかS3へのZIP配置のどちらか
+
+handler
+
+browserUploaderDemo.handler
+
+新しいIAMロールを作成
+
+lambda_browser_uploader_demo_execution
+
+IAMで`lambda_browser_uploader_demo_execution`のロールポリシーを追加
+
+S3 GetObject および DynamoDB putItem を許可
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "Stmt1436603300000",
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:::browser-uploader-demo/upload/*"
+            ]
+        },
+        {
+            "Sid": "Stmt1436603324000",
+            "Effect": "Allow",
+            "Action": [
+                "dynamodb:PutItem"
+            ],
+            "Resource": [
+                "arn:aws:dynamodb:ap-northeast-1:XXXXXXXXXXXX:table/browser-uploader-demo-uploads"
+            ]
+        }
+    ]
+}
+```
+
+S3にアップロードされたらLambaファンクションを実行するように設定
+
+Add event source
+
+Event Source Type S3
+
+Bucket 指定したバケット
+
+Event Type Object Created
+
+
+## LambdaにアップロードするZIPについて
+
+ZIPに含めるのは
+
+- browserUploaderDemo.js
+- config/default.json
+- node_modules
+
+注意するのはZIPのルート直下に配置すること。（フォルダ内ではない）
+プロジェクトフォルダごとZIPするとモジュールが見つからない的なエラーが発生する。
+
+### node_modules
+
+```
+npm install
+```
+
 ## TODO
 
 Lambda や DynamoDB と組み合わせてよくあるアップローダをにしてみる
