@@ -30,7 +30,7 @@ CORS設定サンプル
 ### Cognito
 
 1.Cognito identity pool作成（匿名ID発行を許可）
-2.匿名ユーザー用のIAM RoleにS3へのPutObjectおよびPutObjectAclを許可
+2.匿名ユーザー用のIAM RoleにS3へのPutObjectおよびPutObjectAcl、DynamoDBへのScanを許可
 
 ロールポリシーサンプル
 
@@ -38,6 +38,16 @@ CORS設定サンプル
 {
     "Version": "2012-10-17",
     "Statement": [
+        {
+            "Sid": "Stmt1436605832000",
+            "Effect": "Allow",
+            "Action": [
+                "dynamodb:Scan"
+            ],
+            "Resource": [
+                "arn:aws:dynamodb:ap-northeast-1:XXXXXXXXXXXX:table/browser-uploader-demo-uploads"
+            ]
+        }
         {
             "Sid": "Stmt1436545283000",
             "Effect": "Allow",
@@ -135,9 +145,6 @@ ZIPに含めるのは
 npm install
 ```
 
-## TODO
-
-Lambda や DynamoDB と組み合わせてよくあるアップローダをにしてみる
 
 
 
