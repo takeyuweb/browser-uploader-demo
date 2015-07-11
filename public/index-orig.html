@@ -10,7 +10,8 @@
 <input id="files" type="file" multiple>
 <button id="uploadButton" type="button" disabled>Upload</button>
 
-<ul id="uploadedList"></ul>
+<ul id="downloads"></ul>
+<button id="moreButton" type="button" disabled>More</button>
 
 <script src="aws-sdk.min.js"></script>
 <script>
@@ -21,6 +22,8 @@
         var s3Region = 'ap-northeast-1';
         var s3Bucket = 'yourbucketname';
         var websiteUrlBase = 'http://yourbucketname.s3-website-ap-northeast-1.amazonaws.com';
+        var dynamodbRegion = 'ap-northeast-1';
+        var dynamodbTable = 'yourdynamodbtable';
 
         AWS.config.region = cognitoRegion;
         AWS.config.credentials = new AWS.CognitoIdentityCredentials({
@@ -31,8 +34,85 @@
                 console.log(err, err.stack);
             } else {
                 console.log("Cognito Identity Id:" + AWS.config.credentials.identityId);
+                nextDownloads();
             }
-        });
+        })
+
+        var moreButton = document.getElementById('moreButton');
+        moreButton.addEventListener('click', nextDownloads);
+
+        function enableMoreButton() {
+            moreButton.removeAttribute('disabled');
+        }
+
+        function disableMoreButton() {
+            moreButton.setAttribute('disabled', true);
+        }
+
+        var lastEvaluatedKey = null;
+        function resetDownloads(){
+            lastEvaluatedKey = null;
+            nextDownloads();
+        }
+
+        function nextDownloads(){
+            disableMoreButton();
+            clearDownloads();
+            var dynamodb = new AWS.DynamoDB({
+                region: dynamodbRegion
+            });
+            var limit = 5;
+            var queryParams = {
+                TableName: dynamodbTable,
+                Limit: limit
+            };
+            if (lastEvaluatedKey != null) {
+                queryParams.ExclusiveStartKey = lastEvaluatedKey;
+            }
+            dynamodb.scan(queryParams, function(err, data){
+                if (err) {
+                    console.log(err);
+                } else {
+                    console.log(data);
+                    lastEvaluatedKey = data.LastEvaluatedKey;
+                    for (var i=0; i<data.Count; i++) {
+                        var item = data.Items[i];
+                        appendDownloadLink(item.Key.S)
+                    }
+                }
+                if (lastEvaluatedKey != null) {
+                    enableMoreButton();
+                }
+            });
+        }
+
+        function clearDownloads() {
+            var downloads = document.getElementById('downloads');
+            var child;
+            while (child = downloads.lastChild) downloads.removeChild(child);
+        }
+
+        function appendDownloadLink(key){
+            var element = getDownloadLinkElement(key);
+            downloads.appendChild(element);
+        }
+
+        function prependDownloadLink(key){
+            var element = getDownloadLinkElement(key);
+            downloads.insertBefore(element, downloads.firstChild);
+        }
+
+        function getDownloadLinkElement(key){
+            var url = websiteUrlBase + '/' + key;
+            var downloads = document.getElementById('downloads');
+            var link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('target', '_blank');
+            link.appendChild(document.createTextNode(url));
+            var li = document.createElement('li');
+            li.appendChild(link);
+            return li;
+        }
 
         function startUploading() {
             disableUploadButton();
@@ -53,7 +133,7 @@
                             ACL: 'public-read',
                             ContentType: file.type,
                             Body: file
-                        }, function(err) {
+                        }, function(err, data) {
                             if (err) {
                                 console.log(err, err.stack);
                             } else {
@@ -64,18 +144,10 @@
                 }
             }
             enableUploadButton();
-        }
+        };
 
         function uploaded(key) {
-            var url = websiteUrlBase + '/' + key;
-            var uploadedList = document.getElementById('uploadedList');
-            var link = document.createElement('a');
-            link.setAttribute('href', url);
-            link.setAttribute('target', '_blank');
-            link.appendChild(document.createTextNode(url));
-            var li = document.createElement('li');
-            li.appendChild(link);
-            uploadedList.appendChild(li);
+            prependDownloadLink(key);
         }
 
         var uploadButton = document.getElementById('uploadButton');
