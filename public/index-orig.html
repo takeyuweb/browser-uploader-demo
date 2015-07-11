@@ -61,7 +61,7 @@
             var dynamodb = new AWS.DynamoDB({
                 region: dynamodbRegion
             });
-            var limit = 5;
+            var limit = 1000;
             var queryParams = {
                 TableName: dynamodbTable,
                 Limit: limit
