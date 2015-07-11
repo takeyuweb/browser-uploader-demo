@@ -10,7 +10,7 @@ exports.handler = function(event, context) {
 
     // Get the object from the event and show its content type
     var bucket = event.Records[0].s3.bucket.name;
-    var key = event.Records[0].s3.object.key;
+    var key = decodeURI(event.Records[0].s3.object.key);
 
     var regexp = /^upload\/.+/;
     var match = regexp.exec(key);
