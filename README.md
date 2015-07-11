@@ -145,6 +145,11 @@ ZIPに含めるのは
 npm install
 ```
 
+### TODO
+
+S3から削除されたファイルをDynamoDBから消すLambdaファンクション
+
+
 
 
 
