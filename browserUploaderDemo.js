@@ -8,7 +8,7 @@ var dynamo = new aws.DynamoDB({region: config.dynamodb.region});
 exports.handler = function(event, context) {
     console.log('Received event:', JSON.stringify(event, null, 2));
 
-    // Get the object from the event and show its content type
+    // Get the object from the event
     var bucket = event.Records[0].s3.bucket.name;
     var key = decodeURI(event.Records[0].s3.object.key);
 
